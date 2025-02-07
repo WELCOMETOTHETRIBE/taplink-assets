@@ -1,0 +1,29 @@
+name: Auto Update Images JSON
+
+on:
+  push:
+    paths:
+      - 'taplink-assets/**'
+
+jobs:
+  update-images:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Generate images.json
+        run: |
+          find taplink-assets -type f \( -iname "*.png" -o -iname "*.jpg" -o -iname "*.jpeg" \) | \
+          sed 's|^taplink-assets/|https://raw.githubusercontent.com/WELCOMETOTHETRIBE/taplink-assets/main/|' > image_list.txt
+          
+          jq -R . image_list.txt | jq -s . > images.json
+
+      - name: Commit Changes
+        run: |
+          git config --global user.name 'GitHub Actions'
+          git config --global user.email 'actions@github.com'
+          git add images.json
+          git commit -m "Auto-update images.json"
+          git push
